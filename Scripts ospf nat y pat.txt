@@ -1,0 +1,107 @@
+Scripts ospf nat y pat
+
+Routers
+
+ROUTER PAT
+***************************************************	
+enable 
+configure terminal 
+
+interface g0/0.2
+encapsulation dot1q 2
+ip address 192.168.10.62 255.255.255.224
+exit 
+interface g0/0 
+no shutdown
+ex
+int s0/0/0
+ip add 56.0.56.1 255.255.252.0
+no shut
+ex
+
+router ospf 10 
+router-id 1.1.1.1
+do show ip route
+network 56.0.56.0 0.0.3.255 area 2
+network 192.168.10.32 0.0.0.31 area 2
+ex
+
+ip nat inside source list 1 interface serial0/0/0 overload
+access-list 1 permit 192.168.10.32 0.0.0.31
+int serial0/0/0
+ip nat outside
+ex
+int g0/0
+ip nat inside
+ex
+do show run
+
+******************************************************
+ROUTER SUBRED 16	
+
+en
+conf t
+int s0/0/1
+ip add 56.0.56.2 255.255.252.0
+no shut
+ex
+int s0/0/0
+ip add 56.0.0.1 255.255.252.0
+no shut
+ex
+router ospf 10 
+router id 2.2.2.2
+do show ip route
+network 56.0.56.2 0.0.0.255 area 2
+network 56.0.0.0 0.255.255.255 area 0
+
+*****************************************************************
+ROUTER SUBRED 8
+
+en
+conf t
+int s0/0/1
+ip add 56.0.120.2 255.255.252.0
+no shut
+ex
+int s0/0/0
+ip add 56.0.0.2 255.255.252.0
+no shut
+ex
+router ospf 10 
+router-id 3.3.3.3
+do show ip route
+network 56.0.120.0 0.0.3.255 area 3
+network 56.0.0.0 0.0.3.255 area 0
+**************************************************************
+ROUTER NAT dinamico
+
+enable 
+configure terminal 
+interface g0/0.3
+encapsulation dot1q 3
+ip address 192.168.10.94 255.255.255.224
+exit 
+interface g0/0 
+no shutdown
+ex
+int s0/0/0
+ip add 56.0.120.1 255.255.252.0
+no shut
+ex
+router ospf 10
+router-id 4.4.4.4
+do show ip route 
+network 56.0.120.0 0.0.3.255 area 3
+network 192.168.10.64 0.0.0.31 area 3
+exit
+
+ip nat pool natdinamico 56.0.120.6 56.0.120.20 netmask 255.255.252.0
+access-list 1 permit 192.168.10.64 0.0.0.31
+ip nat inside source list 1 pool natdinamico
+int serial0/0/0 
+ip nat outside
+ex
+int g0/0 
+ip nat inside
+ex
